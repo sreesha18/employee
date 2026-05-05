@@ -2,105 +2,120 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-const API_URL = 'https://69f9c002c509a40d3aa33e1e.mockapi.io/api/employees'
+const API_URL = 'https://69f9cf08c509a40d3aa35b2b.mockapi.io/api/employee'
 
+const name = ref('')
+const designation = ref('')
+const employeeid = ref('')
+const salary = ref('')
 
 const employees = ref([])
-const editId = ref(null)
 
-const form = ref({
-  name: '',
-  designation: '',
-  department: '',
-  salary: ''
-})
-
-
+// Fetch employees
 const getEmployees = async () => {
   const res = await axios.get(API_URL)
   employees.value = res.data
 }
 
-
-const addOrUpdateEmployee = async () => {
-  if (editId.value) {
-    await axios.put(`${API_URL}/${editId.value}`, form.value)
-    editId.value = null
-  } else {
-    await axios.post(API_URL, form.value)
+// Add employee
+const addEmployee = async () => {
+  if (!name.value || !designation.value || !employeeid.value || !salary.value) {
+    alert('Fill all fields')
+    return
   }
 
-  // Reset form
-  form.value = {
-    name: '',
-    designation: '',
-    department: '',
-    salary: ''
-  }
+  await axios.post(API_URL, {
+    name: name.value,
+    designation: designation.value,
+    employeeid: employeeid.value,
+    salary: Number(salary.value)
+  })
+
+  // Clear inputs
+  name.value = ''
+  designation.value = ''
+  employeeid.value = ''
+  salary.value = ''
 
   getEmployees()
 }
 
-const editEmployee = (emp) => {
-  form.value = { ...emp }
-  editId.value = emp.id
-}
-
+// Delete employee
 const deleteEmployee = async (id) => {
   await axios.delete(`${API_URL}/${id}`)
   getEmployees()
 }
 
-
 onMounted(getEmployees)
 </script>
 
 <template>
-  <div class="container mt-5">
-    <h2 class="text-center mb-4 text-primary">Employee Management System</h2>
+  <div class="container">
+    <h1>Employee Management</h1>
 
-    <!-- FORM CARD -->
-    <div class="card p-4 shadow mb-4">
-      <input v-model="form.name" class="form-control mb-2" placeholder="Name" />
-      <input v-model="form.designation" class="form-control mb-2" placeholder="Designation" />
-      <input v-model="form.department" class="form-control mb-2" placeholder="Department" />
-      <input v-model="form.salary" class="form-control mb-2" placeholder="Salary" />
+    <div class="form">
+      <input v-model="name" placeholder="Name" />
+      <input v-model="designation" placeholder="Designation" />
+      <input v-model="employeeid" placeholder="Employee ID" />
+      <input v-model="salary" placeholder="Salary" type="number" />
 
-      <button @click="addOrUpdateEmployee" class="btn btn-success">
-        {{ editId ? 'Update Employee' : 'Add Employee' }}
-      </button>
+      <button @click="addEmployee">Add Employee</button>
     </div>
 
-    <!-- TABLE CARD -->
-    <div class="card p-3 shadow">
-      <table class="table table-hover">
-        <thead class="table-dark">
-          <tr>
-            <th>Name</th>
-            <th>Designation</th>
-            <th>Department</th>
-            <th>Salary</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+    <div class="list">
+      <div v-for="emp in employees" :key="emp.id" class="card">
+        <p><b>Name:</b> {{ emp.name }}</p>
+        <p><b>Designation:</b> {{ emp.designation }}</p>
+        <p><b>ID:</b> {{ emp.employeeid }}</p>
+        <p><b>Salary:</b> ₹{{ emp.salary }}</p>
 
-        <tbody>
-          <tr v-for="emp in employees" :key="emp.id">
-            <td>{{ emp.name }}</td>
-            <td>{{ emp.designation }}</td>
-            <td>{{ emp.department }}</td>
-            <td>{{ emp.salary }}</td>
-            <td>
-              <button @click="editEmployee(emp)" class="btn btn-warning btn-sm me-2">
-                Edit
-              </button>
-              <button @click="deleteEmployee(emp.id)" class="btn btn-danger btn-sm">
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <button @click="deleteEmployee(emp.id)">Delete</button>
+      </div>
     </div>
   </div>
 </template>
+
+<style>
+.container {
+  text-align: center;
+  padding: 20px;
+  background: #ffe4ec;
+  min-height: 100vh;
+}
+
+h1 {
+  color: #d63384;
+}
+
+.form input {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 250px;
+  border: 2px solid #ff4d6d;
+  border-radius: 8px;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 10px;
+  background: #ff4d6d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #c9184a;
+}
+
+.card {
+  background: #caffbf;
+  margin: 15px auto;
+  padding: 15px;
+  width: 300px;
+  border-radius: 10px;
+  border-left: 6px solid green;
+}
+</style>
